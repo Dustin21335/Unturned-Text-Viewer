@@ -1,189 +1,223 @@
 const input = document.getElementById("inputText");
-    const output = document.getElementById("output");
-    const warning = document.getElementById("warning");
-    const tooltip = document.getElementById("tooltip");
-    const fontSelect = document.getElementById("fontSelect");
+const output = document.getElementById("output");
+const warning = document.getElementById("warning");
+const tooltip = document.getElementById("tooltip");
+const fontSelect = document.getElementById("fontSelect");
+const centerToggle = document.getElementById("centerToggle");
 
-    // Convert URT input text to HTML output text
-    function parseURT(text) {
-      return text
-        .replace(/<b>([\s\S]*?)<\/b>/gi, "<strong>$1</strong>")
-        .replace(/<i>([\s\S]*?)<\/i>/gi, "<em>$1</em>")
-        .replace(/<u>([\s\S]*?)<\/u>/gi, "<u>$1</u>")
-        .replace(/<s>([\s\S]*?)<\/s>/gi, "<del>$1</del>")
-        .replace(/<color=(.+?)>([\s\S]*?)<\/color>/gi, "<span style='color:$1'>$2</span>")
-        .replace(/<size=(\d+)>([\s\S]*?)<\/size>/gi, "<span style='font-size:$1px'>$2</span>")
-        .replace(/<align=(left|center|right)>([\s\S]*?)<\/align>/gi, "<div style='text-align:$1'>$2</div>")
-        .replace(/<link="(.+?)">([\s\S]*?)<\/link>/gi, "<a href='$1' target='_blank'>$2</a>");
-    }
+function normalizeURT(text) {
+  return text
+    .replace(/\\n/g, "\n")
 
-    // Check for errors in the input text
-    function checkErrors(text) {
-      let issues = [];
-      const supportedTags = ["b", "i", "u", "s", "color", "size", "align", "link", "sub", "sup"];
-      const tagRegex = /<\/?([a-z]+)(?:=[^>]*)?>/gi;
-      const lines = text.split("\n");
-      let stack = [];
-      let match;
+    .replace(/\[b\]/gi, "<b>")
+    .replace(/\[\/b\]/gi, "</b>")
 
-      lines.forEach((line, lineIndex) => {
-        while ((match = tagRegex.exec(line)) !== null) {
-          const tag = match[1].toLowerCase();
-          const isClosing = match[0].startsWith("</");
+    .replace(/\[i\]/gi, "<i>")
+    .replace(/\[\/i\]/gi, "</i>")
 
-          if (!supportedTags.includes(tag)) {
-            issues.push({ msg: `Unsupported tag <${tag}>.`, line: lineIndex });
-            continue;
-          }
+    .replace(/\[u\]/gi, "<u>")
+    .replace(/\[\/u\]/gi, "</u>")
 
-          if (!isClosing) {
-            stack.push({ tag, line: lineIndex });
-          } else {
-            if (stack.length === 0 || stack[stack.length - 1].tag !== tag) {
-              issues.push({ msg: `Unexpected closing tag </${tag}>.`, line: lineIndex });
-            } else {
-              stack.pop();
-            }
-          }
-        }
+    .replace(/\[s\]/gi, "<s>")
+    .replace(/\[\/s\]/gi, "</s>")
+
+    .replace(/\[color=(.+?)\]/gi, "<color=$1>")
+    .replace(/\[\/color\]/gi, "</color>")
+
+    .replace(/\[size=(.+?)\]/gi, "<size=$1>")
+    .replace(/\[\/size\]/gi, "</size>")
+
+    .replace(/\[align=(.+?)\]/gi, "<align=$1>")
+    .replace(/\[\/align\]/gi, "</align>");
+}
+
+function parseURT(text) {
+  text = normalizeURT(text);
+
+  text = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  text = text
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">");
+
+  text = text
+    .replace(/<b>/gi, "<strong>")
+    .replace(/<i>/gi, "<em>")
+    .replace(/<u>/gi, "<u>")
+    .replace(/<s>/gi, "<del>");
+
+  text = text
+    .replace(/<\/b>/gi, "</strong>")
+    .replace(/<\/i>/gi, "</em>")
+    .replace(/<\/u>/gi, "</u>")
+    .replace(/<\/s>/gi, "</del>");
+
+  text = text.replace(
+    /<color=([^>]+)>/gi,
+    (_, color) => `<span style="color:${color};">`
+  );
+
+  text = text.replace(/<\/color>/gi, "</span>");
+
+  text = text.replace(
+    /<size=(\d+)>/gi,
+    (_, size) => `<span style="font-size:${size}px;">`
+  );
+
+  text = text.replace(/<\/size>/gi, "</span>");
+
+  text = text.replace(
+    /<align=(left|center|right)>/gi,
+    (_, align) => `<div style="text-align:${align};">`
+  );
+
+  text = text.replace(/<\/align>/gi, "</div>");
+
+  text = text.replace(
+    /<link="(.+?)">([\s\S]*?)<\/link>/gi,
+    "<a href='$1' target='_blank'>$2</a>"
+  );
+
+  text = text.replace(/\n/g, "<br>");
+
+  return text;
+}
+
+function checkErrors(text) {
+  let issues = [];
+
+  text = normalizeURT(text);
+
+  const supportedTags = [
+    "b",
+    "i",
+    "u",
+    "s",
+    "color",
+    "size",
+    "align",
+    "link"
+  ];
+
+  const tagRegex = /<\/?([a-z]+)(?:=[^>]*)?>/gi;
+  let match;
+
+  while ((match = tagRegex.exec(text)) !== null) {
+    const tag = match[1].toLowerCase();
+
+    if (!supportedTags.includes(tag)) {
+      const lineIndex =
+        text.substring(0, match.index).split("\n").length - 1;
+
+      issues.push({
+        msg: `Unsupported tag <${tag}>.`,
+        line: lineIndex
       });
-
-      if (stack.length > 0) {
-        stack.forEach(item => {
-          issues.push({ msg: `Unclosed tag <${item.tag}>.`, line: item.line });
-        });
-      }
-
-      // Unsupported color check
-      const allowedColors = [
-        "red","green","blue","yellow","black","white","cyan","magenta",
-        "gray","grey","pink","fuchsia","aqua","brown","lightblue","lime",
-        "maroon","navy","olive","orange","silver","teal"
-      ];
-      const colorRegex = /<color=([^>]+)>/gi;
-      let colorMatch;
-      while ((colorMatch = colorRegex.exec(text)) !== null) {
-        const colorVal = colorMatch[1].toLowerCase();
-        const isHex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(colorVal);
-        if (!allowedColors.includes(colorVal) && !isHex) {
-          const lineIndex = text.substr(0, colorMatch.index).split("\n").length - 1;
-          issues.push({ msg: `Unsupported color value: "${colorVal}".`, line: lineIndex });
-        }
-      }
-
-      return issues;
     }
-    
-    // Error highlighter
-    function highlightLine(lineIndex) {
-      const lines = input.value.split("\n");
-      let charIndex = 0;
-      for (let i = 0; i < lineIndex; i++) {
-        charIndex += lines[i].length + 1;
-      }
+  }
 
-      input.focus();
-      input.setSelectionRange(charIndex, charIndex + lines[lineIndex].length);
-      //input.classList.add("line-highlight");
-      const style = document.createElement("style");
-      style.textContent = `
-        ::selection {
-            background: red;
-            color: black;
-        }
-    `;
-    document.head.appendChild(style);
-document.head.appendChild(style);
 
-      const removeHighlight = () => {
-        const style = document.createElement("style");
-      style.textContent = `
-        ::selection {
-            background: #4aa3ff;
-            color: white;
-        }
-    `;
-    document.head.appendChild(style);
-        input.removeEventListener("input", removeHighlight);
-        input.removeEventListener("click", removeHighlight);
-        input.removeEventListener("mousedown", removeHighlight);
-      };
-      input.addEventListener("input", removeHighlight);
-      input.addEventListener("click", removeHighlight);
-      input.addEventListener("mousedown", removeHighlight);
-    }
+  return issues;
+}
 
-    function updateOutput() {
-      const text = input.value;
-      output.innerHTML = parseURT(text);
+function highlightLine(lineIndex) {
+  const lines = input.value.split("\n");
 
-      const errors = checkErrors(text);
-      tooltip.innerHTML = "";
+  let charIndex = 0;
 
-      if (errors.length > 0) {
-        warning.style.visibility = "visible";
-        errors.forEach((err, idx) => {
-          let item = document.createElement("div");
-          item.textContent = `Error ${idx+1}: ${err.msg} (line ${err.line+1})`;
-          item.onclick = () => highlightLine(err.line);
-          tooltip.appendChild(item);
-        });
-      } else {
-        warning.style.visibility = "hidden";
-      }
-    }
+  for (let i = 0; i < lineIndex; i++) {
+    charIndex += lines[i].length + 1;
+  }
 
-    input.addEventListener("input", updateOutput);
-    updateOutput();
+  input.focus();
 
-    textarea = document.querySelector("textarea");
-        textarea.addEventListener('input', autoResize, false);
+  input.setSelectionRange(
+    charIndex,
+    charIndex + lines[lineIndex].length
+  );
+}
 
-        function autoResize() {
-            this.style.height = 'auto';
-            this.style.height = this.scrollHeight + 'px';
-        }
+function updateOutput() {
+  const text = input.value;
 
-        window.onload = () => autoResize.call(textarea);
-    
-    // List of fonts: system + Google
-    const fontList = [
-      { name: "Monospace", css: "monospace" },
-      { name: "Arial (Default)", css: "Arial, sans-serif" },
-      { name: "Verdana", css: "Verdana, sans-serif" },
-      { name: "Georgia", css: "Georgia, serif" },
-      { name: "Courier New", css: "'Courier New', monospace" },
-  
-  // Google Fonts
-      { name: "Roboto", css: "'Roboto', sans-serif" },
-      { name: "Source Code Pro", css: "'Source Code Pro', monospace" },
-      { name: "Lato", css: "'Lato', sans-serif" },
-      { name: "Merriweather", css: "'Merriweather', serif" },
-      { name: "Fira Code", css: "'Fira Code', monospace" },
-      { name: "Orienta", css: "'Orienta', serif" }
+  output.innerHTML = parseURT(text);
+
+  if (centerToggle.checked) {
+    output.style.textAlign = "center";
+  } else {
+    output.style.textAlign = "left";
+  }
+
+  const errors = checkErrors(text);
+
+  tooltip.innerHTML = "";
+
+  if (errors.length > 0) {
+    warning.style.visibility = "visible";
+
+    errors.forEach((err, idx) => {
+      const item = document.createElement("div");
+
+      item.textContent =
+        `Error ${idx + 1}: ${err.msg} (line ${err.line + 1})`;
+
+      item.onclick = () => highlightLine(err.line);
+
+      tooltip.appendChild(item);
+    });
+  } else {
+    warning.style.visibility = "hidden";
+  }
+}
+
+input.addEventListener("input", updateOutput);
+
+centerToggle.addEventListener("change", updateOutput);
+
+updateOutput();
+
+const textarea = document.querySelector("textarea");
+
+textarea.addEventListener("input", autoResize, false);
+
+function autoResize() {
+  this.style.height = "auto";
+  this.style.height = this.scrollHeight + "px";
+}
+
+window.onload = () => autoResize.call(textarea);
+
+const fontList = [
+  { name: "Monospace", css: "monospace" },
+  { name: "Arial (Default)", css: "Arial, sans-serif" },
+  { name: "Verdana", css: "Verdana, sans-serif" },
+  { name: "Georgia", css: "Georgia, serif" },
+  { name: "Courier New", css: "'Courier New', monospace" },
+
+  { name: "Roboto", css: "'Roboto', sans-serif" },
+  { name: "Source Code Pro", css: "'Source Code Pro', monospace" },
+  { name: "Lato", css: "'Lato', sans-serif" },
+  { name: "Merriweather", css: "'Merriweather', serif" },
+  { name: "Fira Code", css: "'Fira Code', monospace" },
+  { name: "Orienta", css: "'Orienta', serif" }
 ];
 
-  // Dynamically fill the dropdown
-  fontList.forEach((font, idx) => {
-    const option = document.createElement("option");
-    option.value = font.css;
-    option.textContent = font.name;
-    if (idx === 0) option.selected = true; // Default selection
-    fontSelect.appendChild(option);
-  });
+fontList.forEach((font, idx) => {
+  const option = document.createElement("option");
 
-    // Sync dropdown to current output font
-    const currentFont = window.getComputedStyle(output).fontFamily; {
-    for (let option of fontSelect.options) {
-      if (option.value.replace(/['"]/g, "") === currentFont.replace(/['"]/g, "")) {
-        option.selected = true;
-        break;
-      }
-    }
-  };
+  option.value = font.css;
+  option.textContent = font.name;
 
-    // Font selector listener
-    fontSelect.addEventListener("change", () => {
-      const font = fontSelect.value;
-      output.style.fontFamily = font; // only affects output
-    });
+  if (idx === 0) {
+    option.selected = true;
+  }
+
+  fontSelect.appendChild(option);
+});
+
+fontSelect.addEventListener("change", () => {
+  output.style.fontFamily = fontSelect.value;
+});

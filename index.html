@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Unity Rich Text Viewer</title>
+  <title>Unturned Text Viewer</title>
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Roboto&family=Source+Code+Pro&display=swap" rel="stylesheet">
@@ -14,9 +14,8 @@
 </head>
 <body>
 
-    <h2>Unity Rich Text Previewer</h2>
+    <h2>Unturned Text Viewer</h2>
 
-  <!-- Warning box -->
   <div id="warning" class="warning">
     ⚠
     <div id="tooltip" class="tooltip"></div>
@@ -24,7 +23,7 @@
 
   <div class="container">
     <div class="box">
-      <h3>Input (Unity Rich Text)</h3>
+      <h3>Input (Unnturned Text)</h3>
       <textarea id="inputText" placeholder='Example: <color=lime>Hello world!</color>
 Supported Tags: "b", "i", "u", "s", "color", "size", "align", "link", "sub", "sup"'></textarea>
     </div>
@@ -34,12 +33,17 @@ Supported Tags: "b", "i", "u", "s", "color", "size", "align", "link", "sub", "su
     </div>
   </div>
   
-  <!-- Font selector -->
   <div class="font-selector">
     <label for="fontSelect">Font: </label>
     <select id="fontSelect"></select>
   </div>
   
+  <div class="toggle-container">
+    <label class="toggle-label">
+      <input type="checkbox" id="centerToggle">
+      Auto Center Align
+    </label>
+  </div>
 
   <script src="script.js"></script>
 </body>
