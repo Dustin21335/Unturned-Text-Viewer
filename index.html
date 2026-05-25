@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Unturned Text Viewer</title>
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" href="https://i.imgur.com/SY3F9UN.jpeg">
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Roboto&family=Source+Code+Pro&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Orienta&display=swap" rel="stylesheet">
@@ -23,12 +23,12 @@
 
   <div class="container">
     <div class="box">
-      <h3>Input (Unnturned Text)</h3>
+      <h3>Input Text</h3>
       <textarea id="inputText" placeholder='Example: <color=lime>Hello world!</color>
 Supported Tags: "b", "i", "u", "s", "color", "size", "align", "link", "sub", "sup"'></textarea>
     </div>
     <div class="box">
-      <h3>Output (Rendered)</h3>
+      <h3>Output</h3>
       <div id="output" class="output"></div>
     </div>
   </div>
@@ -38,11 +38,9 @@ Supported Tags: "b", "i", "u", "s", "color", "size", "align", "link", "sub", "su
     <select id="fontSelect"></select>
   </div>
   
-  <div class="toggle-container">
-    <label class="toggle-label">
-      <input type="checkbox" id="centerToggle">
-      Auto Center Align
-    </label>
+  <div class="font-selector">
+    <label for="alignSelect">Align: </label>
+    <select id="alignSelect"></select>
   </div>
 
   <script src="script.js"></script>

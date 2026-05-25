@@ -3,7 +3,7 @@ const output = document.getElementById("output");
 const warning = document.getElementById("warning");
 const tooltip = document.getElementById("tooltip");
 const fontSelect = document.getElementById("fontSelect");
-const centerToggle = document.getElementById("centerToggle");
+const alignSelect = document.getElementById("alignSelect");
 
 function normalizeURT(text) {
   return text
@@ -145,12 +145,6 @@ function updateOutput() {
 
   output.innerHTML = parseURT(text);
 
-  if (centerToggle.checked) {
-    output.style.textAlign = "center";
-  } else {
-    output.style.textAlign = "left";
-  }
-
   const errors = checkErrors(text);
 
   tooltip.innerHTML = "";
@@ -174,8 +168,6 @@ function updateOutput() {
 }
 
 input.addEventListener("input", updateOutput);
-
-centerToggle.addEventListener("change", updateOutput);
 
 updateOutput();
 
@@ -220,4 +212,25 @@ fontList.forEach((font, idx) => {
 
 fontSelect.addEventListener("change", () => {
   output.style.fontFamily = fontSelect.value;
+});
+
+const alignList = [
+  { name: "Left", css: "left" },
+  { name: "Center", css: "center" },
+  { name: "Right", css: "right" }
+];
+
+alignList.forEach((align, idx) => {
+  const option = document.createElement("option");
+
+  option.value = align.css;
+  option.textContent = align.name;
+
+  if (idx === 0) option.selected = true;
+
+  alignSelect.appendChild(option);
+});
+
+
+  output.style.textAlign = alignSelect.value;
 });
