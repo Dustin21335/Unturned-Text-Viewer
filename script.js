@@ -232,5 +232,6 @@ alignList.forEach((align, idx) => {
 });
 
 
+alignSelect.addEventListener("change", () => {
   output.style.textAlign = alignSelect.value;
 });
